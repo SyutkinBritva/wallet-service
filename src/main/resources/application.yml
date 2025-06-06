@@ -25,3 +25,9 @@ server:
       min-spare: 10
     accept-count: 100        # очередь запросов, ожидающих свободный поток
     connection-timeout: 2000
+
+logging:
+  level:
+    org.springframework.web: INFO
+    org.hibernate.SQL: INFO
+    com.example.wallet_service: INFO

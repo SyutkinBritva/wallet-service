@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,14 +22,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/wallet")
 @RequiredArgsConstructor
+@Slf4j
 public class WalletController {
 
     private final WalletService walletService;
 
     @PostMapping("/create")
     public ResponseEntity<ResponseWrapper> createWallet() {
-
+        log.info("Create wallet request");
         WalletResponse wallet = walletService.createWallet();
+        log.info("Create wallet response {}", wallet);
         return ResponseEntity.ok(ResponseWrapper.ok(wallet));
     }
 
@@ -37,8 +40,9 @@ public class WalletController {
             @Valid
             @RequestBody
             WalletRequest request) {
-
+        log.info("Process transaction wallet request");
         WalletResponse wallet = walletService.processTransaction(request);
+        log.info("Process transaction wallet response {}", wallet);
         return ResponseEntity.ok(ResponseWrapper.ok(wallet));
     }
 
@@ -47,8 +51,9 @@ public class WalletController {
             @PathVariable
             @NotEmpty
             String walletKey) {
-
+        log.info("Get wallet balance request, walletKey {}", walletKey);
         WalletResponse wallet = walletService.getBalance(walletKey);
+        log.info("Get wallet balance response {}", wallet);
         return ResponseEntity.ok(ResponseWrapper.ok(wallet));
     }
 }
