@@ -29,7 +29,7 @@ public class Wallet {
     @Column(name = "wallet_key", nullable = false, unique = true)
     private UUID walletKey;
 
-    @Column(name = "balance", nullable = false, precision = 19, scale = 4)
+    @Column(name = "balance", nullable = false, precision = 19, scale = 2)
     private BigDecimal balance;
 
 //    @Column(name = "created_at", nullable = false, updatable = false)

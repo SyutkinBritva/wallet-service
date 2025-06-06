@@ -1,10 +1,10 @@
 package com.example.wallet_service.controller;
 
+import com.example.wallet_service.dto.CreateWalletRequest;
 import com.example.wallet_service.dto.WalletRequest;
 import com.example.wallet_service.dto.WalletResponse;
 import com.example.wallet_service.service.WalletService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,7 +22,13 @@ public class WalletController {
 
     private final WalletService walletService;
 
-    @PostMapping
+    @PostMapping("/create")
+    public ResponseEntity<WalletResponse> createWallet(@RequestBody CreateWalletRequest request){
+        WalletResponse wallet =  walletService.createWallet(request);
+        return ResponseEntity.ok(wallet);
+    }
+
+    @PostMapping("/transaction")
     public ResponseEntity<WalletResponse> processTransaction(@RequestBody WalletRequest request) {
         WalletResponse response = walletService.processTransaction(request);
         return ResponseEntity.ok(response);
