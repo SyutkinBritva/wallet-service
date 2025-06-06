@@ -1,5 +1,10 @@
 spring:
   datasource:
+    hikari:
+      maximum-pool-size: 100   # максимальное количество активных соединений
+      minimum-idle: 10         # минимальное количество соединений
+      idle-timeout: 30000      # время (в миллисекундах), после которого неиспользуемое соединение будет закрыто
+      connection-timeout: 20000 # максимальное время ожидания свободного соединения из пула
     url: jdbc:postgresql://localhost:5432/wallet_db
     username: postgres
     password: postgres
@@ -12,3 +17,9 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.yml
 server:
   port: 8080
+  tomcat:
+    threads:
+      max: 100              # количество рабочих потоков для обработки HTTP-запросов
+      min-spare: 10
+    accept-count: 100        # очередь запросов, ожидающих свободный поток
+    connection-timeout: 2000
