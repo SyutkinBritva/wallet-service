@@ -3,3 +3,7 @@ databaseChangeLog:
       file: db/changelog/01-init-table.sql
   - include:
       file: db/changelog/02-add-trigger-updated-at.sql
+  - include:
+      file: db/changelog/03-insert-test-data.sql
+  - include:
+      file: db/changelog/03-insert-test-data.sql

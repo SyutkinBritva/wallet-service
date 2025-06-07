@@ -28,6 +28,12 @@ public class WalletServiceImpl implements WalletService {
 
     private final WalletValidator walletValidator;
 
+    /**
+     * Выполнение транзакции.
+     *
+     * @param request входящие данные (UUID, баланс, тип операции)
+     * @return данные кошелька (UUID & баланс)
+     */
     @Override
     @Transactional
     public WalletResponse processTransaction(WalletRequest request) {
@@ -54,6 +60,12 @@ public class WalletServiceImpl implements WalletService {
         return new WalletResponse(uuidWalletKey, wallet.getBalance());
     }
 
+    /**
+     * Получение текущего баланса кошелька по его ключу.
+     *
+     * @param walletKey строковое представление UUID ключа кошелька
+     * @return объект ответа, содержащий ключ кошелька и его текущий баланс
+     */
     @Override
     @Transactional(readOnly = true)
     public WalletResponse getBalance(String walletKey) {
@@ -64,6 +76,11 @@ public class WalletServiceImpl implements WalletService {
         return walletMapper.toResponse(wallet);
     }
 
+    /**
+     * Создание нового кошелька с нулевым балансом.
+     *
+     * @return объект ответа с UUID нового кошелька и нулевым балансом
+     */
     @Override
     @Transactional
     public WalletResponse createWallet() {
@@ -78,6 +95,12 @@ public class WalletServiceImpl implements WalletService {
         return walletMapper.toResponse(wallet);
     }
 
+    /**
+     * Преобразование строки в UUID кошелька.
+     *
+     * @param walletKey строковое значение ключа кошелька
+     * @return UUID кошелька
+     */
     private UUID parseWalletUUIDfromString(String walletKey) {
 
         UUID parsedWalletKey;

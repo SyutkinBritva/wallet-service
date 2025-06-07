@@ -12,10 +12,22 @@ import java.util.UUID;
 
 public interface WalletRepository extends JpaRepository<Wallet, Long> {
 
+    /**
+     * Запрос в базу данных по кошельку и его pessimistic lock до завершения операции.
+     *
+     * @param walletKey UUID
+     * @return кошелёк из базы
+     */
     @Lock(value = LockModeType.PESSIMISTIC_WRITE)
     @Query("select w from Wallet w where w.walletKey = ?1")
     Optional<Wallet> getWalletForUpdate(UUID walletKey);
 
+    /**
+     * Запрос в базу данных по кошельку без лока.
+     *
+     * @param walletKey UUID
+     * @return кошелёк из базы
+     */
     Optional<Wallet> findByWalletKey(UUID walletKey);
 
 }

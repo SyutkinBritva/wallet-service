@@ -4,6 +4,13 @@ import java.util.Arrays;
 
 import com.example.wallet_service.exception.WalletValidationException;
 
+/**
+ * Перечисление типов операций с кошельком.
+ * <ul>
+ *     <li>{@code DEPOSIT} — пополнение баланса</li>
+ *     <li>{@code WITHDRAW} — снятие средств</li>
+ * </ul>
+ */
 public enum OperationType {
 
     DEPOSIT,

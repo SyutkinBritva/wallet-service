@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Контроллер для работы с кошельком
+ */
 @RestController
 @RequestMapping("/api/v1/wallet")
 @RequiredArgsConstructor
@@ -27,6 +30,11 @@ public class WalletController {
 
     private final WalletService walletService;
 
+    /**
+     * Контроллер для создания нового кошелька. Создан для теста и быстрого добавления нового кошелька в базу.
+     *
+     * @return данные кошелька (UUID & баланс)
+     */
     @PostMapping("/create")
     public ResponseEntity<ResponseWrapper> createWallet() {
         log.info("Create wallet request");
@@ -35,6 +43,12 @@ public class WalletController {
         return ResponseEntity.ok(ResponseWrapper.ok(wallet));
     }
 
+    /**
+     * Контроллер для создания нового кошелька. Создан для теста и быстрого добавления нового кошелька в базу.
+     *
+     * @param request входящие данные (UUID, баланс, тип операции)
+     * @return данные кошелька (UUID & баланс)
+     */
     @PostMapping("/transaction")
     public ResponseEntity<ResponseWrapper> processTransaction(
             @Valid
@@ -46,6 +60,12 @@ public class WalletController {
         return ResponseEntity.ok(ResponseWrapper.ok(wallet));
     }
 
+    /**
+     * Получение текущего баланса по ключу кошелька.
+     *
+     * @param walletKey строковый ключ (UUID) кошелька
+     * @return обёртка {@link ResponseWrapper} с балансом и ключом кошелька
+     */
     @GetMapping("/{walletKey}")
     public ResponseEntity<ResponseWrapper> getBalance(
             @PathVariable
