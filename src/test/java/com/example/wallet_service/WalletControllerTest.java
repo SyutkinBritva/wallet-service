@@ -1,18 +1,24 @@
 package com.example.wallet_service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-
 import com.example.wallet_service.entity.Wallet;
-import org.testcontainers.shaded.org.hamcrest.Matchers;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 public class WalletControllerTest extends AbstractSpringTest {
 
@@ -231,6 +237,101 @@ public class WalletControllerTest extends AbstractSpringTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors").isArray())
                 .andExpect(jsonPath("$.errors[0]").value("Amount must be greater than zero"));
+    }
+
+    /**
+     * Проверка на конкурентное изменение баланса
+     **/
+    @RepeatedTest(20)
+    void shouldReturnBadRequestOnConcurrentBalanceModification() throws Exception {
+        Wallet wallet = saveTestWallet(BigDecimal.valueOf(100));
+
+        int threadCount = 2;
+        CyclicBarrier barrier = new CyclicBarrier(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        Runnable task = () -> {
+            try {
+                barrier.await(); // Ждём, пока оба потока будут готовы
+
+                MockHttpServletResponse response = mockMvc.perform(post(PATH + "/transaction")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(String.format("""
+                                        {
+                                            "walletKey": "%s",
+                                            "operationType": "WITHDRAW",
+                                            "amount": 90.00
+                                        }
+                                        """, wallet.getWalletKey())))
+                        .andReturn()
+                        .getResponse();
+
+                int status = response.getStatus();
+                assertTrue(
+                        status == HttpStatus.OK.value() || status == HttpStatus.BAD_REQUEST.value(),
+                        "Expected status 200 or 400 but was: " + status
+                );
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                latch.countDown();
+            }
+        };
+
+        new Thread(task).start();
+        new Thread(task).start();
+
+        latch.await();
+
+        Wallet updatedWallet = walletRepository.findByWalletKey(wallet.getWalletKey()).orElseThrow();
+        BigDecimal balance = updatedWallet.getBalance();
+
+        assertEquals(BigDecimal.valueOf(10.00).setScale(2), balance);
+    }
+
+    /**
+     * Проверка на нечисловое значение amount
+     **/
+    @Test
+    void shouldReturnErrorWhenAmountIsNotNumeric() throws Exception {
+        Wallet wallet = saveTestWallet();
+
+        mockMvc.perform(post(PATH + "/transaction")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(String.format("""
+                                {
+                                    "walletKey": "%s",
+                                    "operationType": "DEPOSIT",
+                                    "amount": "ten"
+                                }
+                                """, wallet.getWalletKey())))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.errors[0]").value(org.hamcrest.Matchers.containsString("Cannot deserialize value")));
+    }
+
+    /**
+     * Проверка на null в OperationType
+     **/
+    @Test
+    void shouldReturnErrorWhenOperationTypeIsNull() throws Exception {
+        Wallet wallet = saveTestWallet();
+
+        mockMvc.perform(post(PATH + "/transaction")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(String.format("""
+                                {
+                                    "walletKey": "%s",
+                                    "operationType": null,
+                                    "amount": 10.00
+                                }
+                                """, wallet.getWalletKey())))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                // В сообщении обычно будет что-то вроде "must not be null" или "Operation type must be specified"
+                .andExpect(jsonPath("$.errors[0]").value(org.hamcrest.Matchers.anyOf(
+                        org.hamcrest.Matchers.containsString("must not be null"),
+                        org.hamcrest.Matchers.containsString("Operation type must be specified")
+                )));
     }
 
     private Wallet saveTestWallet(BigDecimal balance) {
